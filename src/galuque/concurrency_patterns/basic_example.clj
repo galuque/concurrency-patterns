@@ -1,5 +1,5 @@
 (ns galuque.concurrency-patterns.basic-example
-  (:require [clojure.core.async :as async :refer [go chan >! <!!]]))
+  (:require [clojure.core.async :as async :refer [<!! >! chan go]]))
 
 (defn boring [msg c]
   (go

@@ -1,4 +1,4 @@
-(ns galuque.concurrency-patterns.generator-pattern
+(ns galuque.concurrency-patterns.patterns
   (:require [clojure.core.async :as async :refer [go go-loop chan <!! >!! <! >! alts! alt!! alt! timeout]]))
 
 ;; This pattern consist of a function that returns a channel

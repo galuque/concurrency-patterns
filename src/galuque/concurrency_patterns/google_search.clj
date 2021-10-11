@@ -106,7 +106,7 @@
 
 (defn google-3 [query]
   (let [c     (chan)
-        t     (timeout 89)]
+        t     (timeout 80)]
     (go (>! c (fastest query web1 web2)))
     (go (>! c (fastest query image1 image2)))
     (go (>! c (fastest query video1 video2)))

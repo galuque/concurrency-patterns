@@ -66,7 +66,7 @@
     (go-loop [i 0]
       (>! c {:str (str msg " " i) :wait wait-for-it}) ;; sends the channel too
       (Thread/sleep (* (Math/random) 1e3))
-      (<!! wait-for-it) ;; Blocks until a message is received from main
+      (<! wait-for-it) ;; Blocks until a message is received from main
       (recur (inc i)))
     c))
 
@@ -111,13 +111,13 @@
   (main-5)
   )
 
-;; Timeout using alts!
-;; If one message take longer than 800 msecsit tiimeouts
+;; Timeout using alt!
+;; If one message takes longer than 800 msecs it timeouts
 (defn main-6 []
   (let [c (boring "Joe")]
-    (loop []
-      (alt!!
-        c ([val] (println val) (recur))
+    (go-loop []
+      (alt!
+        c ([result] (println result) (recur))
         (timeout 800) (println "You're to slow")))))
 
 (comment
@@ -128,9 +128,9 @@
 (defn main-7 []
   (let [c (boring "Joe")
         t (timeout 5000)]
-    (loop []
-      (alt!!
-        c ([val] (println val) (recur))
+    (go-loop []
+      (alt!
+        c ([result] (println result) (recur))
         t (println "You're to slow")))))
 
 (comment
@@ -141,10 +141,12 @@
 (defn boring-3 [msg <quit]
   (let [c (chan)]
     (go-loop [i 0]
-      (alt!
-        [[c (str msg " " i)]] (do (Thread/sleep (* (Math/random) 1e3))
-                                  (recur (inc i)))
-        <quit ([_] :return)))
+      (let [msg' (str msg " " i)]
+        (alt!
+          [[c msg']] (do
+                       (Thread/sleep (* (Math/random) 1e3))
+                       (recur (inc i)))
+          <quit ([_] :return))))
     c))
 
 (defn main-8 []
@@ -166,8 +168,9 @@
     (go-loop [i 0]
       (let [msg' (str msg " " i)]
         (alt!
-          [[c msg']] (do (Thread/sleep (* (Math/random) 1e3))
-                         (recur (inc i)))
+          [[c msg']] (do
+                       (Thread/sleep (* (Math/random) 1e3))
+                       (recur (inc i)))
           <quit      ([_]
                       (println "Cleaning up!")
                       (>! <quit "See you!")
@@ -188,7 +191,6 @@
   )
 
 ;; Daisy-chain
-
 (defn f [left right]
   (go (>! left (inc (<! right)))))
 

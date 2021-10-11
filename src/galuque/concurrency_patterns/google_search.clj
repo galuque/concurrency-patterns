@@ -1,7 +1,6 @@
 (ns galuque.concurrency-patterns.google-search
-  (:require
-   [clojure.core.async :as async :refer [go chan <!! >! alt!! timeout]]
-   [clojure.pprint :as pp :refer [pprint]]))
+  (:require [clojure.core.async :as async :refer [<!! >! alt!! chan go timeout]]
+            [clojure.pprint :as pp :refer [pprint]]))
 
 ;; Fake a search with 100 msecs latency
 (defn fake-search [kind]

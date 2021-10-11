@@ -1,5 +1,5 @@
 (ns galuque.concurrency-patterns.patterns
-  (:require [clojure.core.async :as async :refer [go go-loop chan <!! >!! <! >! alts! alt!! alt! timeout]]))
+  (:require [clojure.core.async :as async :refer [<! <!! >! >!! alt! alts! chan go go-loop timeout]]))
 
 ;; This pattern consist of a function that returns a channel
 ;; Channels are values

@@ -1,4 +1,4 @@
-(ns galuque.concurrency-patterns.generator-pattern
+(ns galuque.concurrency-patterns.patterns
   (:require [clojure.core.async :as async :refer [go go-loop chan <!! >!! <! >! alts! alt!! alt! timeout]]))
 
 ;; This pattern consist of a function that returns a channel
@@ -19,9 +19,8 @@
     (println "You're boring. I'm leaving.")))
 
 (comment
-
   (main)
-)
+  )
 
 (defn main-2 []
   (let [joe (boring "Joe")
@@ -32,10 +31,8 @@
     (println "You're both boring. I'm leaving.")))
 
 (comment
-
   (main-2)
-)
-
+  )
 
 ;; Multiplexing
 ;; These programs make Joe and Ann count in lockstep
@@ -55,9 +52,8 @@
     (println "You're both boring. I'm leaving.")))
 
 (comment
-
   (main-3)
-)
+  )
 
 
 ;; Restoring sequence
@@ -86,10 +82,8 @@
     (println "You're both boring. I'm leaving.")))
 
 (comment
-
   (main-4)
-)
-
+  )
 
 
 ;; Go's select is async/alts!
@@ -114,10 +108,8 @@
     (println "You're both boring. I'm leaving.")))
 
 (comment
-
   (main-5)
-)
-
+  )
 
 ;; Timeout using alts!
 ;; If one message take longer than 800 msecsit tiimeouts
@@ -129,9 +121,8 @@
         (timeout 800) (println "You're to slow")))))
 
 (comment
-
   (main-6)
-)
+  )
 
 ;; If the whole loop takes longer than 5 sec it timeouts
 (defn main-7 []
@@ -143,9 +134,8 @@
         t (println "You're to slow")))))
 
 (comment
-
   (main-7)
-)
+  )
 
 ;; Signaling to quit
 (defn boring-3 [msg <quit]
@@ -166,10 +156,8 @@
     (>!! <quit true)))
 
 (comment
-
   (main-8)
-  
-)
+  )
 
 ;; Handle graceful shutdown
 ;; round-trip communication
@@ -196,9 +184,7 @@
     (println "Joe says:" (<!! <quit))))
 
 (comment
-  
   (main-9)
-
   )
 
 ;; Daisy-chain
@@ -211,33 +197,14 @@
   (let [n         100000
         leftmost  (chan)
         channels  (repeatedly n chan)
-        rightmost (reduce (fn [left right]
-                            (f left right)
-                            right)
+        rightmost (reduce (fn [left right] (f left right) right)
                           leftmost
                           channels)]
-    (go (>! rightmost 1))
-    (println (<!! leftmost))))
-
-;; David Nolen's version (around 3x faster)
-(defn main-10-nolen []
-  (let [leftmost (chan)
-        rightmost (loop [n 100000 left leftmost]
-                    (if-not (pos? n)
-                      left
-                      (let [right (chan)]
-                        (f left right)
-                        (recur (dec n) right))))]
     (go
       (>! rightmost 1)
       (println (<! leftmost)))))
 
 (comment
-  
   (time
    (main-10))
-  
-  (time
-   (main-10-nolen))
-  
   )

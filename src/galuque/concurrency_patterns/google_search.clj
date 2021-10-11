@@ -28,16 +28,14 @@
 
 ;; Making it concurrent
 (defn google-2 [query]
-  (let [c     (chan)]
+  (let [results (atom [])
+        c       (chan)]
     (go (>! c (web query)))
     (go (>! c (image query)))
     (go (>! c (video query)))
-    (loop [i      3
-           result []]
-      (if (> i 0)
-        (recur (dec i)
-               (conj result (<!! c)))
-        result))))
+    (dotimes [_ 3]
+      (swap! results conj (<!! c)))
+    @results))
 
 (defn main-2 []
   (pprint (google-2 "clojure")))
@@ -51,20 +49,17 @@
 ;; Wait max 80ms for answers
 ;; gauranteed response in under 80ms
 (defn google-2-1 [query]
-  (let [c     (chan)
-        t     (timeout 80)]
+  (let [results (atom [])
+        c       (chan)
+        t       (timeout 80)]
     (go (>! c (web query)))
     (go (>! c (image query)))
     (go (>! c (video query)))
-    (loop [i      3
-           result []]
-      (if (> i 0)
-        (alt!!
-          c ([val] (recur (dec i)
-                          (conj result val)))
-          t  (do (println "Timed out")
-                 result))
-        result))))
+    (dotimes [_ 3]
+      (swap! results conj (alt!!
+                            c ([result] result)
+                            t (println "Timed out"))))
+    @results))
 
 (defn main-2-1 []
   (pprint (google-2-1 "clojure")))
@@ -79,13 +74,13 @@
 ;; First define de fastest function
 (defn fastest [query & replicas]
   (let [c              (chan)
-        search-replica (fn [replica] 
+        search-replica (fn [replica]
                          (go (>! c (replica query))))]
     (doall (map search-replica replicas))
     (<!! c)))
 
 (defn use-fastest []
-  (pprint 
+  (pprint
    (fastest "clojure"
             (fake-search "replica-1")
             (fake-search "replica-2"))))
@@ -105,29 +100,26 @@
 (def video2 (fake-search "video-2"))
 
 (defn google-3 [query]
-  (let [c     (chan)
-        t     (timeout 80)]
+  (let [results (atom [])
+        c       (chan)
+        t       (timeout 80)]
     (go (>! c (fastest query web1 web2)))
     (go (>! c (fastest query image1 image2)))
     (go (>! c (fastest query video1 video2)))
-    (loop [i      3
-           result []]
-      (if (> i 0)
-        (alt!!
-          c ([val] (recur (dec i)
-                          (conj result val)))
-          t  (do (println "Timed out")
-                 result))
-        result))))
+    (dotimes [_ 3]
+      (swap! results conj (alt!!
+                            c ([result] result)
+                            t (println "Timed out"))))
+    @results))
 
 (defn main-3 []
   (pprint (google-3 "clojure")))
 
 (comment
- (dotimes [_ 3]
-   (time
-    (main-3)))
- )
+  (dotimes [_ 3]
+    (time
+     (main-3)))
+  )
 
 ;; Converted a slow, sequential, failure-sensitive program into a
 ;; fast, concurrent, replicated, robust one

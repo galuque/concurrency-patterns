@@ -197,23 +197,9 @@
   (let [n         100000
         leftmost  (chan)
         channels  (repeatedly n chan)
-        rightmost (reduce (fn [left right]
-                            (f left right)
-                            right)
+        rightmost (reduce (fn [left right] (f left right) right)
                           leftmost
                           channels)]
-    (go (>! rightmost 1))
-    (println (<!! leftmost))))
-
-;; David Nolen's version (around 3x faster)
-(defn main-10-nolen []
-  (let [leftmost (chan)
-        rightmost (loop [n 100000 left leftmost]
-                    (if-not (pos? n)
-                      left
-                      (let [right (chan)]
-                        (f left right)
-                        (recur (dec n) right))))]
     (go
       (>! rightmost 1)
       (println (<! leftmost)))))
@@ -221,7 +207,4 @@
 (comment
   (time
    (main-10))
-
-  (time
-   (main-10-nolen))
   )

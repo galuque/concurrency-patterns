@@ -3,18 +3,15 @@
 
 (defn boring [msg c]
   (go
-    (loop [i 0]
+    (doseq [i (range)]
       (>! c (str msg " " i))
-      (Thread/sleep (* (Math/random) 1e3))
-      (recur (inc i)))))
+      (Thread/sleep (* (Math/random) 1e3)))))
 
 (defn main []
   (let [c (chan)]
     (boring "boring!" c)
-    (loop [i 0]
-      (when (< i 5)
-        (println "You say:" (<!! c))
-        (recur (inc i))))
+    (doseq [_ (range 5)]
+      (println "You say:" (<!! c)))
     (println "You're boring. I'm leaving.")))
 
 (comment
